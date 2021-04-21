@@ -18,6 +18,7 @@ import threading
 #importing threading module use concurrent programming
 import hashlib
 #hashlib module for hashing passcodes
+from client_chat import ClientChat, Ser, Cli
 
 
 HEADER_LENGTH = 10
@@ -93,10 +94,15 @@ class Client:
                         continue
                     else:
                         print(new_socket)
+                        self.chat_contol(new_socket)
         except Exception as e:
             print('Reading error: {}'.format(str(e)))
             sys.exit()
             
+    def chat_contol(self, new_socket):
+        client_chat = ClientChat(new_socket)
+        client_chat.start_chat_meet()
+
 
 if __name__ == '__main__':
     name = input("Name: ").title()

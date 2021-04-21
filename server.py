@@ -26,7 +26,7 @@ class Server:
 
     def initilize_socket(self):
         """
-            Initlize a socket on port 8082 and start listning to clients request
+            Initlize a socket on port 8082 and start listening to clients request
         """ 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
