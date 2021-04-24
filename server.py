@@ -64,6 +64,7 @@ class Server:
             if not self.data_base_handler.validate_data(user["data"], username['data'], password['data']):
                 self.client_socket.close()
                 print("request denied")
+                return
             else:
                 print("request accepted")
 

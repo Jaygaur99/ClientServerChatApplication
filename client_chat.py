@@ -6,38 +6,43 @@ PORT = 65000
 IP = 'localhost'
 
 class Ser(Thread):
-    def __init__(self):
+    def __init__(self, name):
         super().__init__()
-        self.address = (IP, PORT)
         self.is_on = True
+        self.name = name
 
     def initilize_socket(self, address):
         """
             Initlize a socket on port 8085 and start listening to clients request
         """ 
+        self.address = address
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_socket.bind(address)
         self.server_socket.listen()
-
+    
+    def send_name(self):
+        name = f"{self.name}".encode()
+        self.other_name = self.soc.recv(1024).decode()
+        self.soc.send(name)
+        
     def send(self):
         try:
             while True:
-                msg = input("Server: ")
+                msg = input(f"{self.name}: ")
                 self.soc.send(msg.encode())
-        except Exception as e:
-            print(f"Error {e}")
-        return
+            return
+        except:
+            pass
 
     def recv(self):
         try:
             while True:
                 msg = self.soc.recv(1024).decode()
-                print(f"Client: {msg}".rjust(50))
-        except Exception as e:
-            print(f"ERROR {e}")
-        return
-
+                print(f"{self.other_name}: {msg}".rjust(50))
+            return
+        except:
+            pass
 
     def run(self):
         self.listen()
@@ -49,26 +54,30 @@ class Ser(Thread):
         
             send.join()
             recv.join()
-        except KeyboardInterrupt as e:
+        except KeyboardInterrupt:
             self.soc.close()
             self.server_socket.close()
             return
-        except Exception as e:
-            print(f"Error, {e}")
-        
+        except:
+            print(f"Error, Your Friend Is Not online Anymore")
+            self.soc.close()
+            self.server_socket.close()
         print("All conections are closed now")
         self.soc.close()
         self.server_socket.close()
         
     def listen(self):
-        self.soc, self.soc_add = self.server_socket.accept()
         print(f"Starting to listen on {self.address}")
+        self.soc, self.soc_add = self.server_socket.accept()
+        self.send_name()
+        print(f"Connected to {self.address}")
 
 
 
 class Cli(Thread):
-    def __init__(self):
+    def __init__(self, name):
         super().__init__()
+        self.name = name
 
     def initilize_socket(self, address):
         """
@@ -77,25 +86,31 @@ class Cli(Thread):
         self.address = address
         self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.soc.connect(self.address)
+        self.send_name()
         print(f"Connected to {self.address}")
+    
+    def send_name(self):
+        name = f"{self.name}".encode()
+        self.soc.send(name)
+        self.other_name = self.soc.recv(1024).decode()
     
     def send(self):
         try:
             while True:
-                msg = input("Client: ")
+                msg = input(f"{self.name}: ")
                 self.soc.send(msg.encode())
             return None
-        except Exception as e:
-            print(f"Error {e}")
+        except:
+            pass
 
     def recv(self):
         try:
             while True:
                 msg = self.soc.recv(1024).decode()
-                print(f"Client: {msg}".rjust(50))
+                print(f"{self.other_name}: {msg}".rjust(50))
             return None
-        except Exception as e:
-            print(f"ERROR {e}")
+        except:
+            pass
 
     def run(self):
         send = Thread(target=self.send)
@@ -105,11 +120,12 @@ class Cli(Thread):
             recv.start()
             send.join()
             recv.join()
-        except KeyboardInterrupt as e:
+        except KeyboardInterrupt:
             self.soc.close()
             return
-        except Exception as e:
-            print(f"Error, {e}")
+        except:
+            print(f"Error, Your Friend Is Not online Anymore")
+            pass
         print("All conections are closed now")
         self.soc.close()
 
@@ -118,28 +134,18 @@ class ClientChat:
     """
         A class to connect to the client chatting session to other client
     """
-    def __init__(self, address):
-        self.ip = address.split(',')[0][2:-1]
+    def __init__(self, address, name):
+        self.name = name
+        if address == False:
+            self.ip = IP
+            self.state = 2
+        else:
+            self.ip = address.split(',')[0][2:-1]
+            self.state = 1
         self.address = (self.ip, PORT)
-        self.state = self.initilize_state()
         self.state_list = []
-        self.add_states(Ser())
-        self.add_states(Cli())
-
-    def initilize_state(self):
-        """A small method to initilize state of self.state"""
-        state = None
-        while True:
-            try:
-                state = int(input("1. Do you want to receive connection\n2. Do you want to request connection: "))
-            except:
-                print("Invalid Input! Try again")
-                continue
-            if state == 1:
-                return 1
-            elif state == 2:
-                return 2
-            print("Invalid Input! Try again")
+        self.add_states(Ser(self.name))
+        self.add_states(Cli(self.name))
 
     def add_states(self, state):
         """A method to add states to the state_list"""
@@ -153,4 +159,4 @@ class ClientChat:
 
 
 if __name__ == "__main__":
-    c =ClientChat(('127.0.0.1', 80))
+    c =ClientChat(('127.0.0.1', 80), "Jay")

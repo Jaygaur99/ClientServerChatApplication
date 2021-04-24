@@ -46,7 +46,6 @@ class Client:
         self.authenticate()
         self.ask_for_client_address()
 
-
     def authenticate(self):
         """
             A method to autheticate to the server
@@ -87,20 +86,29 @@ class Client:
         """
         try:
             while True:
-                message = input(f"Enter person's name you want to communicate with : ")
-                if message:
-                    new_socket = self.get_data_from_server(message)
-                    if new_socket is None:
-                        continue
-                    else:
-                        print(new_socket)
-                        self.chat_contol(new_socket)
+                i = 0
+                try:
+                    i = int(input("Enter 1 to lookup\nEnter 2 to enter receiving state\nEnter 3 to do nothing\n"))
+                except Exception as e:
+                    print("Enter an integer value")
+                if i == 1:
+                    find_name = input(f"Enter person's name you want to communicate with : ")
+                    if find_name:
+                        new_socket = self.get_data_from_server(find_name)
+                        if new_socket is None:
+                            continue
+                        else:
+                            print(f"Trying to connect {find_name}")
+                            self.chat_contol(new_socket, self.name)
+                elif i == 2:
+                    print("Waiting for connection")
+                    self.chat_contol(False, self.name)
         except Exception as e:
             print('Reading error: {}'.format(str(e)))
             sys.exit()
             
-    def chat_contol(self, new_socket):
-        client_chat = ClientChat(new_socket)
+    def chat_contol(self, new_socket, find_name):
+        client_chat = ClientChat(new_socket, name)
         client_chat.start_chat_meet()
 
 
